@@ -158,13 +158,14 @@ class ThumbnailView: NSStackView {
         assignIfDifferent(&hiddenIcon.isHidden, !element.isHidden || Preferences.hideStatusIcons)
         assignIfDifferent(&fullscreenIcon.isHidden, !element.isFullscreen || Preferences.hideStatusIcons)
         assignIfDifferent(&minimizedIcon.isHidden, !element.isMinimized || Preferences.hideStatusIcons)
-        assignIfDifferent(&spaceIcon.isHidden, element.isWindowlessApp || Spaces.isSingleSpace() || Preferences.hideSpaceNumberLabels)
+        assignIfDifferent(&spaceIcon.isHidden, element.isWindowlessApp || Preferences.hideSpaceNumberLabels)
         if !spaceIcon.isHidden {
             if element.spaceIndex > 30 || element.isOnAllSpaces {
                 spaceIcon.setStar()
                 spaceIcon.toolTip = NSLocalizedString("Window is on every Space", comment: "")
             } else {
-                spaceIcon.setNumber(element.spaceIndex, false)
+                // spaceIcon.setNumber(element.spaceIndex, false)
+                spaceIcon.setText(element.aerospaceId ?? "N/A")
                 spaceIcon.toolTip = String(format: NSLocalizedString("Window is on Space %d", comment: ""), element.spaceIndex)
             }
         }

@@ -24,4 +24,4 @@ openssl genrsa -out $certificateFile.key 2048
 # generate self-signed certificate
 openssl req -x509 -new -config $certificateFile.conf -nodes -key $certificateFile.key -extensions extensions -sha256 -out $certificateFile.crt
 # wrap key and certificate into PKCS12
-openssl pkcs12 -export -inkey $certificateFile.key -in $certificateFile.crt -out $certificateFile.p12 -passout pass:$certificatePassword
+openssl pkcs12 -export -legacy -inkey $certificateFile.key -in $certificateFile.crt -out $certificateFile.p12 -passout pass:$certificatePassword

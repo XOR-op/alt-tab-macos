@@ -33,6 +33,10 @@ class ThumbnailFontIconView: ThumbnailTitleView {
         assignIfDifferent(&string, String(UnicodeScalar(Int(baseCharacter.unicodeScalars.first!.value) + offset)!))
     }
 
+    func setText(_ text: String) {
+        assignIfDifferent(&string, text)
+    }
+
     private func baseCharacterAndOffset(_ number: Int, _ filled: Bool) -> (String, Int) {
         if number <= 9 {
             // numbers alternate between empty and full circles; we skip the full circles

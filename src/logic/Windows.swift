@@ -1,5 +1,60 @@
 import Cocoa
 
+func executeCommand(_ command: String) -> [String]? {
+    // Create a Process instance
+    let process = Process()
+    process.executableURL = URL(fileURLWithPath: "/bin/bash") // Using zsh to execute the command
+    process.arguments = ["-c", command]
+    
+    // Create a pipe to capture the output
+    let pipe = Pipe()
+    process.standardOutput = pipe
+    
+    do {
+        // Launch the process
+        try process.run()
+        
+        // Read the output data
+        let data = pipe.fileHandleForReading.readDataToEndOfFile()
+        
+        // Convert the data to a string
+        guard let outputString = String(data: data, encoding: .utf8) else {
+            print("Failed to convert data to string")
+            return nil
+        }
+        
+        // Split the output by lines
+        let lines = outputString.split(separator: "\n").map { String($0) }
+        return lines
+        
+    } catch {
+        print("Failed to run command: \(error)")
+        return nil
+    }
+}
+
+func getAerospaceMapping() -> [UInt32: String]? {
+    let command = "aerospace list-windows --all --format '%{window-id},%{workspace}'"
+    let lines = executeCommand(command)
+    if lines == nil {
+        return nil
+    }
+    var mapping = [UInt32: String]()
+    for line in lines! {
+        let parts = line.split(separator: ",")
+        if parts.count == 2 {
+            if let number = UInt32(parts[0]) {
+                // Add the mapping to the dictionary
+                mapping[number] = String(parts[1])
+            } else {
+                print("Invalid number: \(parts[0])")
+            }
+        }
+    }
+    return mapping
+}
+
+
 class Windows {
     static var list = [Window]()
     static var focusedWindowIndex = Int(0)
@@ -9,6 +64,20 @@ class Windows {
 
     /// reordered list based on preferences, keeping the original index
     static func reorderList() {
+        // Assign space name to aerospaceId based on windowId
+        if let aerospaceMapping = getAerospaceMapping() {
+            list.forEach { window in
+                if let aerospaceId = aerospaceMapping[window.cgWindowId!] {
+                    window.aerospaceId = aerospaceId
+                }
+            }
+        }
+        // print mapping
+        for window in list {
+            print("Window: \(window.title) - Aerospace: \(window.aerospaceId ?? "nil")")
+        }
+        
+
         list.sort {
             // separate buckets for these types of windows
             if $0.isWindowlessApp != $1.isWindowlessApp {
@@ -34,7 +103,12 @@ class Windows {
                 order = sortByAppNameThenWindowTitle($0, $1)
             }
             if sortType == .space {
-                order = $0.spaceIndex.compare($1.spaceIndex)
+                // order = $0.spaceIndex.compare($1.spaceIndex)
+                // use aerospaceId instead of spaceIndex
+                // if either aerospaceId is nil, the window with non-nil aerospaceId should come first
+                order = $0.aerospaceId == nil ? .orderedDescending :
+                         $1.aerospaceId == nil ? .orderedAscending :
+                          $0.aerospaceId!.compare($1.aerospaceId!)
                 if order == .orderedSame {
                     order = sortByAppNameThenWindowTitle($0, $1)
                 }

@@ -19,6 +19,7 @@ class Window {
     var isWindowlessApp = false
     var position: CGPoint?
     var size: CGSize?
+    var aerospaceId: String?
     var spaceId = CGSSpaceID.max
     var spaceIndex = SpaceIndex.max
     var axUiElement: AXUIElement!
