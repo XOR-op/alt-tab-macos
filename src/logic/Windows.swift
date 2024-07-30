@@ -1,10 +1,10 @@
 import Cocoa
 
-func executeCommand(_ command: String) -> [String]? {
+func executeSearch() -> [String]? {
     // Create a Process instance
     let process = Process()
-    process.executableURL = URL(fileURLWithPath: "/bin/bash") // Using zsh to execute the command
-    process.arguments = ["-c", command]
+    process.executableURL = URL(fileURLWithPath: "/opt/homebrew/bin/aerospace") // Using zsh to execute the command
+    process.arguments = ["list-windows", "--all", "--format", "%{window-id},%{workspace}"]
     
     // Create a pipe to capture the output
     let pipe = Pipe()
@@ -34,8 +34,8 @@ func executeCommand(_ command: String) -> [String]? {
 }
 
 func getAerospaceMapping() -> [UInt32: String]? {
-    let command = "aerospace list-windows --all --format '%{window-id},%{workspace}'"
-    let lines = executeCommand(command)
+    // let command = "aerospace list-windows --all --format '%{window-id},%{workspace}'"
+    let lines = executeSearch()
     if lines == nil {
         return nil
     }

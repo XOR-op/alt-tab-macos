@@ -457,6 +457,7 @@
 		D04BAF77F9D94C397EB646AE /* 1-row.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "1-row.jpg"; sourceTree = "<group>"; };
 		D04BAFA20F13FB588F6CCB81 /* bug_report.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = bug_report.md; sourceTree = "<group>"; };
 		D04BAFDA9E2623E21CBD6CEF /* zh-TW */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = "zh-TW"; path = InfoPlist.strings; sourceTree = "<group>"; };
+		D77E91462C59A0C800E58233 /* alt-tab-macosDebug.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "alt-tab-macosDebug.entitlements"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -830,6 +831,7 @@
 		D04BA1463D2A17038222BB84 = {
 			isa = PBXGroup;
 			children = (
+				D77E91462C59A0C800E58233 /* alt-tab-macosDebug.entitlements */,
 				D04BA1A461BBB5A9BE15E015 /* Products */,
 				D04BAD40CE2D3A8AAC3819D0 /* .gitignore */,
 				D04BA0E1C5DBC07108AC2F54 /* README.md */,
@@ -2520,6 +2522,8 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = D04BA1232AFEEFE90D5CC827 /* debug.xcconfig */;
 			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = "alt-tab-macosDebug.entitlements";
+				ENABLE_HARDENED_RUNTIME = NO;
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
 			};
 			name = Debug;
