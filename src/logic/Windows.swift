@@ -62,9 +62,7 @@ class Windows {
     // the first few thumbnails are the most commonly looked at; we pay special attention to them
     static let criticalFirstThumbnails = 3
 
-    /// reordered list based on preferences, keeping the original index
-    static func reorderList() {
-        // Assign space name to aerospaceId based on windowId
+    static func flushAerospaceStats(){
         if let aerospaceMapping = getAerospaceMapping() {
             list.forEach { window in
                 if let aerospaceId = aerospaceMapping[window.cgWindowId!] {
@@ -76,8 +74,10 @@ class Windows {
         for window in list {
             print("Window: \(window.title) - Aerospace: \(window.aerospaceId ?? "nil")")
         }
-        
+    }
 
+    /// reordered list based on preferences, keeping the original index
+    static func reorderList() {
         list.sort {
             // separate buckets for these types of windows
             if $0.isWindowlessApp != $1.isWindowlessApp {

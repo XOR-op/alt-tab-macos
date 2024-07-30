@@ -294,6 +294,7 @@ class App: AppCenterApplication, NSApplicationDelegate {
             let screen = NSScreen.preferred()
             self.shortcutIndex = shortcutIndex
             Windows.refreshWhichWindowsToShowTheUser(screen)
+            Windows.flushAerospaceStats()
             Windows.reorderList()
             if (!Windows.list.contains { $0.shouldShowTheUser }) { hideUi(); return }
             Windows.setInitialFocusedAndHoveredWindowIndex()
