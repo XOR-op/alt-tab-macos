@@ -7,7 +7,7 @@ class ThumbnailsView: NSVisualEffectView {
 
     convenience init() {
         self.init(frame: .zero)
-        material = .dark
+        material = .ultraDark
         state = .active
         wantsLayer = true
         updateRoundedCorners(Preferences.windowCornerRadius)

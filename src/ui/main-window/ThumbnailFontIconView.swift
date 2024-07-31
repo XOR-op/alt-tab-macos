@@ -1,4 +1,5 @@
 import Cocoa
+import CryptoKit
 
 enum Symbols: String {
     case circledPlusSign = "􀁌"
@@ -13,26 +14,35 @@ enum Symbols: String {
     case filledCircledNumber10 = "􀔔"
 }
 
-func colorFrom(text: String) -> NSColor {
-    // Step 1: Generate a hash value from the text
-    let hash = text.hashValue
+func hashString(_ text: String) -> CGFloat {
+    let data = Data(text.utf8)
+    let digest = Insecure.MD5.hash(data: data)
     
-    // Step 2: Convert the hash into a color
+    // Convert last 2 bytes to an integer
+    let firstTwoBytes = digest.suffix(2)
+    let md5Int = Int(firstTwoBytes.reduce(0) { $0 << 8 + Int($1) })
+    
+    // Normalize the integer to a 0-360 range
+    let angle = CGFloat(md5Int % 360)
+    return angle
+}
+
+func colorFrom(text: String) -> NSColor {
     // Use HSL to ensure visibility of the text on the background
-    let hue = CGFloat(text.hashValue % 360) / 360.0
-    let saturation = 0.8
-    let lightness = 0.7
+    let hue = hashString(text) / 360.0
+    let saturation = 0.7
+    let lightness = 1.0
     return NSColor(calibratedHue: hue, saturation: saturation, brightness: lightness, alpha: 1.0)
 }
 
 // Font icon using SF Symbols from the SF Pro font from Apple
 // see https://developer.apple.com/design/human-interface-guidelines/sf-symbols/overview/
 class ThumbnailFontIconView: ThumbnailTitleView {
-    convenience init(_ symbol: Symbols, _ tooltip: String?, _ size: CGFloat = Preferences.fontHeight, _ color: NSColor = .white, _ shadow: NSShadow? = nil) {
-        self.init(size, shadow)
+    convenience init(_ symbol: Symbols, _ tooltip: String?, _ size: CGFloat = Preferences.fontHeight, _ color: NSColor = .white, _ shadow: NSShadow? = ThumbnailView.makeShadow(NSColor.darkGray)) {
+        self.init(size, nil)
         string = symbol.rawValue
         // This helps SF symbols display vertically centered and not clipped at the top
-        font = NSFont(name: "SF Pro Text", size: (size * 0.85).rounded())!
+        font = NSFont(name: "SF Pro Text", size: (size * 0.99).rounded())!
         textColor = NSColor(red: 255.0/255.0, green: 132.0/255.0, blue: 56.0/255.0, alpha: 1.0)
         // This helps SF symbols not be clipped on the right
         widthAnchor.constraint(equalToConstant: size * 1.15).isActive = true
