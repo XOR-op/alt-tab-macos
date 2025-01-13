@@ -87,8 +87,8 @@ class Appearance {
                 fontHeight = 12
             case .medium:
                 rowsCount = isHorizontalScreen ? 4 : 7
-                iconSize = 30
-                fontHeight = 13
+                iconSize = 32
+                fontHeight = 16
             case .large:
                 rowsCount = isHorizontalScreen ? 3 : 6
                 iconSize = 32

@@ -1,4 +1,5 @@
 import Cocoa
+import CommonCrypto
 
 enum Symbols: String {
     case circledPlusSign = "􀁌"
@@ -13,6 +14,40 @@ enum Symbols: String {
     case filledCircledNumber10 = "􀔔"
     case circledInfo = "􀅴"
 }
+
+func sha256Hash(_ string: String) -> [UInt8] {
+    // Convert the string to a Data object
+    let data = Data(string.utf8)
+    
+    // Prepare an empty buffer for the hash
+    var hash = [UInt8](repeating: 0, count: Int(CC_SHA256_DIGEST_LENGTH))
+    
+    // Perform the hash operation
+    _ = data.withUnsafeBytes { bytes in
+        CC_SHA256(bytes.baseAddress, CC_LONG(data.count), &hash)
+    }
+    
+    // Convert the hash bytes to a hexadecimal string
+    return hash
+}
+
+func colorFrom(text: String) -> NSColor {
+    let hash = sha256Hash(text)
+    
+    // Convert first bytes to an integer
+    let hashInt = Int(hash.prefix(3).reduce(0) { $0 << 8 + Int($1) })
+    // Use HSL to ensure visibility of the text on the background
+    // Capped at 310 to remove pink
+    let hue = CGFloat(hashInt % 11) / 11 * 310
+    var saturation = 0.7
+    var lightness = 1.0
+    if hue > 110.0 && hue < 170.0 {
+        saturation = 0.6
+        lightness = 0.9
+    }
+    return NSColor(calibratedHue: hue / 360, saturation: saturation, brightness: lightness, alpha: 1.0)
+}
+
 
 // Font icon using SF Symbols from the SF Pro font from Apple
 // see https://developer.apple.com/design/human-interface-guidelines/sf-symbols/overview/
@@ -29,7 +64,7 @@ class ThumbnailFontIconView: ThumbnailTitleView {
                      color: NSColor = Appearance.fontColor,
                      shadow: NSShadow? = ThumbnailView.makeShadow(Appearance.indicatedIconShadowColor)) {
         // This helps SF symbols display vertically centered and not clipped at the top
-        self.init(shadow: shadow, font: NSFont(name: "SF Pro Text", size: (size * 0.85).rounded())!)
+        self.init(shadow: nil, font: NSFont(name: "SF Pro Text", size: (size * 1).rounded())!)
         initialAttributedString = NSMutableAttributedString(string: symbol.rawValue, attributes: [.paragraphStyle: ThumbnailFontIconView.paragraphStyle])
         attributedStringValue = initialAttributedString
         textColor = color
@@ -51,8 +86,9 @@ class ThumbnailFontIconView: ThumbnailTitleView {
         replaceCharIfNeeded(Symbols.filledCircledStar.rawValue)
     }
     
-    func setText(_ text: String) {
+    func setText(_ monitorId: UInt32, _ text: String) {
         replaceCharIfNeeded(text)
+        textColor = colorFrom(text: text)
     }
 
     private func replaceCharIfNeeded(_ newChar: String) {

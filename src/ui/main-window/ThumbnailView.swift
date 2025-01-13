@@ -355,7 +355,7 @@ class ThumbnailView: FlippedView {
                 spaceIcon.setStar()
                 spaceIcon.toolTip = NSLocalizedString("Window is on every Space", comment: "")
             } else {
-                spaceIcon.setText(element.aerospaceId ?? "N/A")
+                spaceIcon.setText(element.monitorId ?? 0, element.aerospaceId ?? "N/A")
                 spaceIcon.toolTip = String(format: NSLocalizedString("Window is on Space %d", comment: ""), element.spaceIndex)
             }
         }
