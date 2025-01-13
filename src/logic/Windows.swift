@@ -1,5 +1,57 @@
 import Cocoa
 
+func executeSearch() -> [String]? {    // Create a Process instance
+    let process = Process()
+    process.executableURL = URL(fileURLWithPath: "/opt/homebrew/bin/aerospace") // Using zsh to execute the command
+    process.arguments = ["list-windows", "--all", "--format", "%{window-id},%{monitor-id},%{workspace}"]
+    
+    // Create a pipe to capture the output
+    let pipe = Pipe()
+    process.standardOutput = pipe
+    
+    do {
+        // Launch the process
+        try process.run()
+        
+        // Read the output data
+        let data = pipe.fileHandleForReading.readDataToEndOfFile()
+        
+        // Convert the data to a string
+        guard let outputString = String(data: data, encoding: .utf8) else {
+            print("Failed to convert data to string")
+            return nil
+        }
+        
+        // Split the output by lines
+        let lines = outputString.split(separator: "\n").map { String($0) }
+        return lines
+        
+    } catch {
+        print("Failed to run command: \(error)")
+        return nil
+    }
+}
+
+func getAerospaceMapping() -> [UInt32: (UInt32, String)]? {
+    let lines = executeSearch()
+    if lines == nil {
+        return nil
+    }
+    var mapping = [UInt32: (UInt32, String)]()
+    for line in lines! {
+        let parts = line.split(separator: ",")
+        if parts.count == 3 {
+            if let number = UInt32(parts[0]), let monitor = UInt32(parts[1]){
+                // Add the mapping to the dictionary
+                mapping[number] = (monitor, String(parts[2]))
+            } else {
+                print("Invalid number: \(parts[0])")
+            }
+        }
+    }
+    return mapping
+}
+
 class Windows {
     static var list = [Window]()
     static var focusedWindowIndex = Int(0)
@@ -23,6 +75,18 @@ class Windows {
                 window.lastFocusOrder = index
                 return window
             }
+    }
+    
+    private static func flushAerospaceStats(){
+        print("Flushing Aerospace Stats")
+        if let aerospaceMapping = getAerospaceMapping() {
+            list.forEach { window in
+                if let result = aerospaceMapping[window.cgWindowId!] {
+                    window.monitorId = result.0
+                    window.aerospaceId = result.1
+                }
+            }
+        }
     }
 
     /// reordered list based on preferences, keeping the original index
@@ -51,15 +115,11 @@ class Windows {
                 order = compareByAppNameThenWindowTitle($0, $1)
             }
             if sortType == .space {
-                if $0.isOnAllSpaces && $1.isOnAllSpaces {
-                    order = .orderedSame
-                } else if $0.isOnAllSpaces {
-                    order = .orderedAscending
-                } else if $1.isOnAllSpaces {
-                    order = .orderedDescending
-                } else if let spaceIndex0 = $0.spaceIndexes.first, let spaceIndex1 = $1.spaceIndexes.first {
-                    order = spaceIndex0.compare(spaceIndex1)
-                }
+                // use aerospaceId instead of spaceIndex
+                // if either aerospaceId is nil, the window with non-nil aerospaceId should come first
+                order = $0.aerospaceId == nil ? .orderedDescending :
+                         $1.aerospaceId == nil ? .orderedAscending :
+                          $0.aerospaceId!.compare($1.aerospaceId!)
                 if order == .orderedSame {
                     order = compareByAppNameThenWindowTitle($0, $1)
                 }
@@ -296,6 +356,7 @@ class Windows {
             refreshIfWindowShouldBeShownToTheUser(window)
         }
         refreshWhichWindowsToShowTheUser()
+        flushAerospaceStats()
         sort()
         if (!list.contains { $0.shouldShowTheUser }) { return false }
         return true

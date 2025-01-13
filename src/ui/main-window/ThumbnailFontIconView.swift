@@ -50,10 +50,14 @@ class ThumbnailFontIconView: ThumbnailTitleView {
     func setFilledStar() {
         replaceCharIfNeeded(Symbols.filledCircledStar.rawValue)
     }
+    
+    func setText(_ text: String) {
+        replaceCharIfNeeded(text)
+    }
 
     private func replaceCharIfNeeded(_ newChar: String) {
         if newChar != attributedStringValue.string {
-            initialAttributedString.replaceCharacters(in: NSRange(location: 0, length: 1), with: newChar)
+            initialAttributedString.replaceCharacters(in: NSRange(location: 0, length: newChar.count), with: newChar)
             attributedStringValue = initialAttributedString
         }
     }

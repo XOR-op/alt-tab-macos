@@ -18,6 +18,8 @@ class Window {
     var isWindowlessApp: Bool { get { cgWindowId == nil } }
     var position: CGPoint?
     var size: CGSize?
+    var monitorId: UInt32?
+    var aerospaceId: String?
     var spaceIds = [CGSSpaceID.max]
     var spaceIndexes = [SpaceIndex.max]
     var axUiElement: AXUIElement?
