@@ -11,12 +11,13 @@ final class WindowOrderResolverTests: XCTestCase {
 
     private func w(searchMatches: Bool = false, searchRelevance: Double = 0,
                    isWindowlessApp: Bool = false, isHidden: Bool = false, isMinimized: Bool = false,
-                   isOnAllSpaces: Bool = false, spaceIndexes: [Int] = [],
+                   isOnAllSpaces: Bool = false, spaceIndexes: [Int] = [], aerospaceId: String? = nil,
                    lastFocusOrder: Int = 0, creationOrder: Int = 0,
                    appName: String = "App", windowTitle: String = "Title") -> OrderWindow {
         let state = WindowState(id: "w", isInvisible: false, isWindowlessApp: isWindowlessApp,
                                 isFullscreen: false, isMinimized: isMinimized, isTabbed: false,
                                 isOnAllSpaces: isOnAllSpaces, spaceIds: [], spaceIndexes: spaceIndexes,
+                                aerospaceId: aerospaceId,
                                 lastFocusOrder: lastFocusOrder, creationOrder: creationOrder, title: windowTitle)
         let app = ApplicationState(pid: 0, bundleIdentifier: nil, localizedName: appName, isHidden: isHidden)
         return OrderWindow(state: state, app: app, searchMatches: searchMatches, searchRelevance: searchRelevance)
@@ -106,40 +107,38 @@ final class WindowOrderResolverTests: XCTestCase {
 
     // MARK: - F. Space
 
-    func testSpaceAllSpacesWindowsFirst() {
-        XCTAssertTrue(WindowOrderResolver.isOrderedBefore(w(isOnAllSpaces: true),
-                                                          w(isOnAllSpaces: false, spaceIndexes: [0]),
+    func testSpaceAeroSpaceIdSortsBeforeMissingId() {
+        XCTAssertTrue(WindowOrderResolver.isOrderedBefore(w(aerospaceId: "2"),
+                                                          w(aerospaceId: nil),
                                                           sortType: .space))
     }
 
-    func testSpaceLowerSpaceIndexFirst() {
-        XCTAssertTrue(WindowOrderResolver.isOrderedBefore(w(spaceIndexes: [0]), w(spaceIndexes: [2]),
+    func testSpaceAeroSpaceIdSortsLexicographically() {
+        XCTAssertTrue(WindowOrderResolver.isOrderedBefore(w(aerospaceId: "1"), w(aerospaceId: "2"),
                                                           sortType: .space))
     }
 
     func testSpaceTiebreaksByAppName() {
-        XCTAssertTrue(WindowOrderResolver.isOrderedBefore(w(spaceIndexes: [1], appName: "Aaa"),
-                                                          w(spaceIndexes: [1], appName: "Bbb"),
+        XCTAssertTrue(WindowOrderResolver.isOrderedBefore(w(aerospaceId: "1", appName: "Aaa"),
+                                                          w(aerospaceId: "1", appName: "Bbb"),
                                                           sortType: .space))
     }
 
-    /// Both windows on all spaces → no space-index ordering, fall through to alphabetical tiebreak.
-    func testSpaceBothOnAllSpacesTiebreaksByAppName() {
-        XCTAssertTrue(WindowOrderResolver.isOrderedBefore(w(isOnAllSpaces: true, appName: "Aaa"),
-                                                          w(isOnAllSpaces: true, appName: "Bbb"),
+    /// Matching AeroSpace workspaces fall through to the alphabetical tiebreak.
+    func testSpaceSameAeroSpaceIdTiebreaksByAppName() {
+        XCTAssertTrue(WindowOrderResolver.isOrderedBefore(w(aerospaceId: "1", appName: "Aaa"),
+                                                          w(aerospaceId: "1", appName: "Bbb"),
                                                           sortType: .space))
-        XCTAssertFalse(WindowOrderResolver.isOrderedBefore(w(isOnAllSpaces: true, appName: "Bbb"),
-                                                           w(isOnAllSpaces: true, appName: "Aaa"),
+        XCTAssertFalse(WindowOrderResolver.isOrderedBefore(w(aerospaceId: "1", appName: "Bbb"),
+                                                           w(aerospaceId: "1", appName: "Aaa"),
                                                            sortType: .space))
     }
 
-    /// Symmetric to `testSpaceAllSpacesWindowsFirst`: when only `b` is on all spaces, `a` sorts
-    /// AFTER `b` (b first). The existing test covers only the "a on all spaces" side of the
-    /// branch — this pins the mirrored case so the comparator can't silently regress to
-    /// asymmetric behavior (which would break strict-weak-ordering and `Array.sort`).
-    func testSpaceOnlyBOnAllSpacesSortsBFirst() {
-        XCTAssertFalse(WindowOrderResolver.isOrderedBefore(w(isOnAllSpaces: false, spaceIndexes: [0]),
-                                                           w(isOnAllSpaces: true),
+    /// Symmetric to `testSpaceAeroSpaceIdSortsBeforeMissingId`: a missing workspace sorts after
+    /// a known workspace, regardless of argument order.
+    func testSpaceKnownAeroSpaceIdSortsBeforeMissingIdWhenKnownIdIsSecond() {
+        XCTAssertFalse(WindowOrderResolver.isOrderedBefore(w(aerospaceId: nil),
+                                                           w(aerospaceId: "2"),
                                                            sortType: .space))
     }
 

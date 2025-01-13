@@ -1,5 +1,51 @@
 import Cocoa
 
+private enum AeroSpaceWindows {
+    typealias Mapping = [CGWindowID: (monitorId: UInt32, workspace: String)]
+
+    private static let executableUrl = URL(fileURLWithPath: "/opt/homebrew/bin/aerospace")
+    private static let arguments = ["list-windows", "--all", "--format", "%{window-id},%{monitor-id},%{workspace}"]
+
+    static func mapping() -> Mapping? {
+        let process = Process()
+        process.executableURL = executableUrl
+        process.arguments = arguments
+
+        let pipe = Pipe()
+        process.standardOutput = pipe
+        process.standardError = Pipe()
+
+        do {
+            try process.run()
+            process.waitUntilExit()
+        } catch {
+            Logger.warning { "Failed to run AeroSpace window query: \(error)" }
+            return nil
+        }
+        guard process.terminationStatus == 0 else {
+            Logger.warning { "AeroSpace window query exited with status \(process.terminationStatus)" }
+            return nil
+        }
+        guard let output = String(data: pipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) else {
+            Logger.warning { "Failed to decode AeroSpace window query output" }
+            return nil
+        }
+
+        var mapping = Mapping()
+        for line in output.split(whereSeparator: \.isNewline) {
+            let parts = line.split(separator: ",", maxSplits: 2, omittingEmptySubsequences: false)
+            guard parts.count == 3,
+                  let windowId = UInt32(parts[0]),
+                  let monitorId = UInt32(parts[1]) else {
+                Logger.debug { "Skipping invalid AeroSpace window line: \(line)" }
+                continue
+            }
+            mapping[CGWindowID(windowId)] = (monitorId, String(parts[2]))
+        }
+        return mapping
+    }
+}
+
 class Windows {
     static var list = [Window]()
     private(set) static var byWindowId = [CGWindowID: Window]()
@@ -77,8 +123,23 @@ class Windows {
             refreshIfWindowShouldBeShownToTheUser(window, filters)
         }
         refreshWhichWindowsToShowTheUser()
+        flushAerospaceStats()
         sort()
         return true
+    }
+
+    private static func flushAerospaceStats() {
+        guard let aerospaceMapping = AeroSpaceWindows.mapping() else { return }
+        for window in list {
+            guard let cgWindowId = window.cgWindowId else {
+                window.monitorId = nil
+                window.aerospaceId = nil
+                continue
+            }
+            let aerospaceWindow = aerospaceMapping[cgWindowId]
+            window.monitorId = aerospaceWindow?.monitorId
+            window.aerospaceId = aerospaceWindow?.workspace
+        }
     }
 
     private static func shouldBatchSpaceUpdates() -> Bool {

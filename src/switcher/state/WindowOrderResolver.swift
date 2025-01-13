@@ -46,15 +46,7 @@ enum WindowOrderResolver {
             order = compareByAppNameThenTitle(a, b)
         }
         if sortType == .space {
-            if a.state.isOnAllSpaces && b.state.isOnAllSpaces {
-                order = .orderedSame
-            } else if a.state.isOnAllSpaces {
-                order = .orderedAscending
-            } else if b.state.isOnAllSpaces {
-                order = .orderedDescending
-            } else if let s0 = a.state.spaceIndexes.first, let s1 = b.state.spaceIndexes.first {
-                order = intOrder(s0, s1)
-            }
+            order = compareByAeroSpaceWorkspace(a.state.aerospaceId, b.state.aerospaceId)
             if order == .orderedSame {
                 order = compareByAppNameThenTitle(a, b)
             }
@@ -71,6 +63,13 @@ enum WindowOrderResolver {
             return a.state.title.localizedStandardCompare(b.state.title)
         }
         return order
+    }
+
+    private static func compareByAeroSpaceWorkspace(_ a: String?, _ b: String?) -> ComparisonResult {
+        if a == nil && b == nil { return .orderedSame }
+        if a == nil { return .orderedDescending }
+        if b == nil { return .orderedAscending }
+        return a!.compare(b!)
     }
 
     private static func intOrder(_ a: Int, _ b: Int) -> ComparisonResult {

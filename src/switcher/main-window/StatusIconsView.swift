@@ -77,6 +77,11 @@ class StatusIconsView: FlippedView {
         icons[Self.spaceIdx].tooltip = String(format: NSLocalizedString("Window is on Space %d", comment: ""), number)
     }
 
+    func setSpaceText(_ text: String) {
+        icons[Self.spaceIdx].symbol = text
+        icons[Self.spaceIdx].tooltip = text
+    }
+
     static func symbolForSpace(_ number: Int) -> String {
         let (base, offset) = number <= 9
             ? (Symbols.circledNumber0.rawValue, number * 2)

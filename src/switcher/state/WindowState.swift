@@ -22,6 +22,8 @@ struct WindowState: Equatable {
     var isOnAllSpaces: Bool
     var spaceIds: [UInt64]          // CGSSpaceID === UInt64
     var spaceIndexes: [Int]         // SpaceIndex === Int
+    var monitorId: UInt32? = nil
+    var aerospaceId: String? = nil
     var lastFocusOrder: Int
     var creationOrder: Int
     var title: String
