@@ -397,10 +397,20 @@ class Windows {
             BackgroundWork.screenshotsQueue.addOperation { [weak window] in
                 if source == .refreshOnlyThumbnailsAfterShowUi && !App.app.appIsBeingUsed { return }
                 if let wid = window?.cgWindowId, let cgImage = wid.screenshot() {
+                    let imageToUse: CGImage
+                    if cgImage.width < 10 || cgImage.height < 10 {
+                        if let existingThumbnail = window?.thumbnail {
+                            imageToUse = existingThumbnail
+                        } else {
+                            imageToUse = cgImage
+                        }
+                    } else {
+                        imageToUse = cgImage
+                    }
                     if source == .refreshOnlyThumbnailsAfterShowUi && !App.app.appIsBeingUsed { return }
                     DispatchQueue.main.async { [weak window] in
                         if source == .refreshOnlyThumbnailsAfterShowUi && !App.app.appIsBeingUsed { return }
-                        window?.refreshThumbnail(cgImage)
+                        window?.refreshThumbnail(imageToUse)
                     }
                 }
             }
