@@ -150,20 +150,30 @@ class Window {
     }
 
     func refreshThumbnail(_ screenshot: CALayerContents) {
-        thumbnail = screenshot
+        // macOS 26 can sometimes return a tiny placeholder capture for a window. Preserve the
+        // previous thumbnail in that case to avoid replacing a useful preview with a cropped dot.
+        let screenshotToUse: CALayerContents
+        if let screenshotSize = screenshot.size(),
+           (screenshotSize.width < 10 || screenshotSize.height < 10),
+           let thumbnail {
+            screenshotToUse = thumbnail
+        } else {
+            screenshotToUse = screenshot
+        }
+        thumbnail = screenshotToUse
         if !SwitcherSession.isActive || !shouldShowTheUser { return }
         if let position, let size,
            let view = (TilesView.recycledViews.first { $0.window_?.cgWindowId == cgWindowId }) {
             if !view.thumbnail.isHidden {
                 let thumbnailSize = TileView.thumbnailSize(size, false)
                 let newSize = thumbnailSize.width != view.thumbnail.frame.width || thumbnailSize.height != view.thumbnail.frame.height
-                view.thumbnail.updateContents(screenshot, thumbnailSize)
+                view.thumbnail.updateContents(screenshotToUse, thumbnailSize)
                 // if the thumbnail size has changed, we need to refresh the open UI
                 if newSize {
                     App.refreshOpenUiAfterExternalEvent([])
                 }
             }
-            PreviewPanel.updateIfShowing(cgWindowId, screenshot, position, size)
+            PreviewPanel.updateIfShowing(cgWindowId, screenshotToUse, position, size)
         }
     }
 
