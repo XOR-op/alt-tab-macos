@@ -418,7 +418,7 @@ class App: AppCenterApplication {
             pendingShowSettingsWindow = false
             showSettingsWindow()
         }
-        #if DEBUG
+        #if false
         QAMenu.shared = QAMenu()
         QAMenu.shared?.orderFront(nil)
         if QAMenu.openSettingsOnLaunch { App.showSettingsWindow() }

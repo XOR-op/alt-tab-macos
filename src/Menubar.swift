@@ -60,12 +60,12 @@ class Menubar {
         // invalidates NSStatusBarContentView mid-FBS-scene-update — `_NSDetectedLayoutRecursion`.
         applyMenubarIconPreferences()
         observeRemovalFromMenubar()
-        #if DEBUG
+        #if false
         installQAMenuMiddleClickMonitor()
         #endif
     }
 
-    #if DEBUG
+    #if false
     private static var qaMenuMiddleClickMonitor: Any?
 
     // NSStatusBarButton doesn't forward `.otherMouseDown` to its action even when added to
